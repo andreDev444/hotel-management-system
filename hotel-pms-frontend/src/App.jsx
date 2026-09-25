@@ -2,32 +2,36 @@ import { useState } from 'react';
 import { initialRooms } from './data/roomsData';
 import RoomCard from './components/RoomCard';
 import Navbar from './components/Navbar';
+import BookingModal from './components/BookingModal';
 import { useAuth } from './context/AuthContext';
 
 function App() {
   const { user } = useAuth();
   const [rooms, setRooms] = useState(initialRooms);
+  const [bookings, setBookings] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
 
   const handleStatusChange = (roomId, newStatus) => {
     setRooms(prevRooms => 
-      prevRooms.map(room => 
-        room.id === roomId ? { ...room, status: newStatus } : room
-      )
+      prevRooms.map(room => room.id === roomId ? { ...room, status: newStatus } : room)
     );
   };
 
-  // Filtrado de habitaciones segun rol y filtros de búsqueda
+  const handleSaveBooking = (newBooking) => {
+    setBookings(prev => [...prev, newBooking]);
+    // Cambiar automáticamente la habitación a estado "RESERVED"
+    handleStatusChange(newBooking.roomId, 'RESERVED');
+    alert(`¡Reserva ${newBooking.bookingCode} creada exitosamente!`);
+  };
+
   const filteredRooms = rooms.filter(room => {
     const matchesSearch = room.number.includes(searchTerm) || room.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'ALL' || room.status === selectedStatus;
-    
-    // Si el rol es Personal de Limpieza (HOUSEKEEPING), por defecto solo se enfoca en las que requieren limpieza o mantenimiento
     if (user.role === 'HOUSEKEEPING') {
       return matchesSearch && (room.status === 'CLEANING' || room.status === 'OUT_OF_SERVICE');
     }
-
     return matchesSearch && matchesStatus;
   });
 
@@ -36,13 +40,7 @@ function App() {
       <Navbar />
 
       <h1>Dashboard - {user.role === 'HOUSEKEEPING' ? '🧹 Módulo de Limpieza' : '🛎️ Control de Habitaciones'}</h1>
-      <p style={{ color: '#aaa', marginBottom: '20px' }}>
-        {user.role === 'HOUSEKEEPING' 
-          ? 'Habitaciones asignadas para revisión, aseo o mantenimiento.' 
-          : 'Vista general del estado operativo de las habitaciones del hotel.'}
-      </p>
-
-      {/* Panel de Filtros solo visible para Admin, Recepción y Gerente */}
+      
       {user.role !== 'HOUSEKEEPING' && (
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', backgroundColor: '#1e1e1e', padding: '16px', borderRadius: '8px' }}>
           <input 
@@ -70,14 +68,55 @@ function App() {
 
       {/* Grid de habitaciones */}
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-        {filteredRooms.length > 0 ? (
-          filteredRooms.map(room => (
-            <RoomCard key={room.id} room={room} onStatusChange={handleStatusChange} />
-          ))
-        ) : (
-          <p style={{ color: '#aaa' }}>No hay habitaciones que requieran atención con el rol actual.</p>
-        )}
+        {filteredRooms.map(room => (
+          <RoomCard 
+            key={room.id} 
+            room={room} 
+            onStatusChange={handleStatusChange} 
+            onOpenBooking={(room) => setSelectedRoomForBooking(room)}
+          />
+        ))}
       </div>
+
+      {/* Tabla de Reservas Confirmadas */}
+      {bookings.length > 0 && user.role !== 'HOUSEKEEPING' && (
+        <div style={{ marginTop: '40px', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px' }}>
+          <h2>📅 Reservas Registradas ({bookings.length})</h2>
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', marginTop: '12px' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #444', color: '#aaa' }}>
+                <th style={{ padding: '8px' }}>Código</th>
+                <th style={{ padding: '8px' }}>Habitación</th>
+                <th style={{ padding: '8px' }}>Huésped</th>
+                <th style={{ padding: '8px' }}>Documento</th>
+                <th style={{ padding: '8px' }}>Fechas</th>
+                <th style={{ padding: '8px' }}>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map((b, idx) => (
+                <tr key={idx} style={{ borderBottom: '1px solid #333' }}>
+                  <td style={{ padding: '8px', fontWeight: 'bold', color: '#eab308' }}>{b.bookingCode}</td>
+                  <td style={{ padding: '8px' }}>Hab. {b.roomNumber}</td>
+                  <td style={{ padding: '8px' }}>{b.guestName}</td>
+                  <td style={{ padding: '8px' }}>{b.document}</td>
+                  <td style={{ padding: '8px' }}>{b.checkIn} ➔ {b.checkOut}</td>
+                  <td style={{ padding: '8px' }}>🟡 {b.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal de Reserva */}
+      {selectedRoomForBooking && (
+        <BookingModal 
+          room={selectedRoomForBooking} 
+          onClose={() => setSelectedRoomForBooking(null)}
+          onSaveBooking={handleSaveBooking}
+        />
+      )}
     </div>
   );
 }

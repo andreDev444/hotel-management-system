@@ -16,7 +16,7 @@ export default function Navbar() {
       borderBottom: '2px solid #333'
     }}>
       <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: '#646cff' }}>
-        🏨 Hotel PMS System
+        Hotel System
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -35,10 +35,10 @@ export default function Navbar() {
             cursor: 'pointer'
           }}
         >
-          <option value="ADMIN">👤 Admin</option>
-          <option value="RECEPTIONIST">🛎️ Recepción</option>
-          <option value="HOUSEKEEPING">🧹 Limpieza</option>
-          <option value="MANAGER">📊 Gerente</option>
+          <option value="ADMIN"> Admin</option>
+          <option value="RECEPTIONIST"> Recepción</option>
+          <option value="HOUSEKEEPING"> Limpieza</option>
+          <option value="MANAGER"> Gerente</option>
         </select>
 
         <div style={{
