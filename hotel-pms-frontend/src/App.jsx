@@ -4,16 +4,17 @@ import RoomCard from './components/RoomCard';
 import Navbar from './components/Navbar';
 import BookingModal from './components/BookingModal';
 import CheckoutModal from './components/CheckoutModal';
+import HousekeepingPanel from './components/HousekeepingPanel';
 import { useAuth } from './context/AuthContext';
 
 function App() {
   const { user } = useAuth();
   const [rooms, setRooms] = useState(initialRooms);
   const [bookings, setBookings] = useState([]);
+  const [issues, setIssues] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   
-  // Modales
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
   const [selectedBookingForCheckout, setSelectedBookingForCheckout] = useState(null);
 
@@ -29,7 +30,6 @@ function App() {
     alert(`¡Reserva ${newBooking.bookingCode} creada exitosamente!`);
   };
 
-  // Acción: Realizar Check-In
   const handleCheckIn = (bookingCode) => {
     setBookings(prev => prev.map(b => {
       if (b.bookingCode === bookingCode) {
@@ -38,10 +38,8 @@ function App() {
       }
       return b;
     }));
-    alert(`Check-in realizado para la reserva ${bookingCode}. Habitación Ocupada.`);
   };
 
-  // Acción: Finalizar Check-Out
   const handleCompleteCheckout = (booking, totalPaid, paymentMethod, services) => {
     setBookings(prev => prev.map(b => {
       if (b.bookingCode === booking.bookingCode) {
@@ -49,10 +47,20 @@ function App() {
       }
       return b;
     }));
-
-    // Pasar habitación automáticamente a estado EN LIMPIEZA 
     handleStatusChange(booking.roomId, 'CLEANING');
-    alert(`Check-Out finalizado. Total cobrado: $${totalPaid.toLocaleString()}. La habitación pasó a "En Limpieza".`);
+  };
+
+  // Manejar reporte de daños / mantenimiento
+  const handleReportIssue = (roomId, description) => {
+    const newIssue = {
+      id: Date.now(),
+      roomId,
+      description,
+      date: new Date().toLocaleDateString(),
+      reportedBy: user.name
+    };
+    setIssues(prev => [...prev, newIssue]);
+    handleStatusChange(roomId, 'OUT_OF_SERVICE');
   };
 
   const filteredRooms = rooms.filter(room => {
@@ -68,7 +76,7 @@ function App() {
     <div style={{ padding: '24px', fontFamily: 'Segoe UI, sans-serif', backgroundColor: '#121212', minHeight: '100vh', color: '#fff' }}>
       <Navbar />
 
-      <h1>Dashboard - {user.role === 'HOUSEKEEPING' ? ' Módulo de Limpieza' : ' Control de Operaciones'}</h1>
+      <h1>Dashboard - {user.role === 'HOUSEKEEPING' ? '🧹 Módulo de Limpieza' : '🛎️ Control de Operaciones'}</h1>
       
       {user.role !== 'HOUSEKEEPING' && (
         <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', backgroundColor: '#1e1e1e', padding: '16px', borderRadius: '8px' }}>
@@ -107,10 +115,17 @@ function App() {
         ))}
       </div>
 
-      {/* Tabla de Reservas y Operaciones */}
+      {/* Módulo de Limpieza y Mantenimiento */}
+      <HousekeepingPanel 
+        rooms={rooms} 
+        onStatusChange={handleStatusChange}
+        onReportIssue={handleReportIssue}
+      />
+
+      {/* Tabla de Reservas */}
       {bookings.length > 0 && user.role !== 'HOUSEKEEPING' && (
         <div style={{ marginTop: '40px', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px' }}>
-          <h2> Gestión de Reservas y Check-In / Check-Out</h2>
+          <h2>📅 Gestión de Reservas y Check-In / Check-Out</h2>
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', marginTop: '12px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid #444', color: '#aaa' }}>
@@ -140,23 +155,15 @@ function App() {
                   </td>
                   <td style={{ padding: '8px' }}>
                     {b.status === 'CONFIRMED' && (
-                      <button 
-                        onClick={() => handleCheckIn(b.bookingCode)}
-                        style={{ padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                      >
+                      <button onClick={() => handleCheckIn(b.bookingCode)} style={{ padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                         🛎️ Check-In
                       </button>
                     )}
-
                     {b.status === 'CHECKED_IN' && (
-                      <button 
-                        onClick={() => setSelectedBookingForCheckout(b)}
-                        style={{ padding: '6px 12px', backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                      >
+                      <button onClick={() => setSelectedBookingForCheckout(b)} style={{ padding: '6px 12px', backgroundColor: '#f97316', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                         🚪 Check-Out & Cobrar
                       </button>
                     )}
-
                     {b.status === 'CHECKED_OUT' && (
                       <span style={{ color: '#aaa', fontSize: '0.85rem' }}>Finalizado (${b.totalPaid?.toLocaleString()})</span>
                     )}
@@ -165,6 +172,20 @@ function App() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Historial de Reportes de Mantenimiento */}
+      {issues.length > 0 && (
+        <div style={{ marginTop: '24px', backgroundColor: '#1e1e1e', padding: '20px', borderRadius: '8px' }}>
+          <h2>🛠️ Reportes de Mantenimiento Activos ({issues.length})</h2>
+          <ul>
+            {issues.map(iss => (
+              <li key={iss.id} style={{ color: '#f87171', marginBottom: '8px' }}>
+                <b>Habitación {iss.roomId}:</b> {iss.description} <i>(Reportado por: {iss.reportedBy} el {iss.date})</i>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
