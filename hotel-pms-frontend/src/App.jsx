@@ -6,6 +6,7 @@ import BookingModal from './components/BookingModal';
 import CheckoutModal from './components/CheckoutModal';
 import HousekeepingPanel from './components/HousekeepingPanel';
 import { useAuth } from './context/AuthContext';
+import AnalyticsDashboard from './components/AnalyticsDashboard';
 
 function App() {
   const { user } = useAuth();
@@ -114,6 +115,11 @@ function App() {
           />
         ))}
       </div>
+
+      {/* Mostrar Analítica a Administradores y Gerentes */}
+      {(user.role === 'ADMIN' || user.role === 'MANAGER') && (
+       <AnalyticsDashboard rooms={rooms} bookings={bookings} />
+      )}
 
       {/* Módulo de Limpieza y Mantenimiento */}
       <HousekeepingPanel 
