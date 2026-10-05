@@ -1,0 +1,11 @@
+booking_id,room_type,lead_time_days,length_of_stay,total_amount,cancelled,customer_type
+RES-1001,Suite,12,3,450000,0,Transient
+RES-1002,Standard,2,1,80000,0,Transient
+RES-1003,Double,30,5,600000,1,Corporate
+RES-1004,Standard,5,2,160000,0,Transient
+RES-1005,Suite,45,4,600000,1,Transient
+RES-1006,Double,1,2,240000,0,Corporate
+RES-1007,Standard,14,3,240000,0,Transient
+RES-1008,Suite,3,1,150000,0,Transient
+RES-1009,Double,60,7,840000,1,Corporate
+RES-1010,Standard,0,1,80000,0,Transient
