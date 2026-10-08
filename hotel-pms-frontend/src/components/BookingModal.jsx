@@ -2,77 +2,152 @@ import React, { useState } from 'react';
 
 export default function BookingModal({ room, onClose, onSaveBooking }) {
   const [guestName, setGuestName] = useState('');
-  const [document, setDocument] = useState('');
-  const [email, setEmail] = useState('');
-  const [nationality, setNationality] = useState('');
+  const [guestDocument, setGuestDocument] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestsCount, setGuestsCount] = useState(1);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [loading, setLoading] = useState(false);
 
   if (!room) return null;
 
-  const roomPrice = room.price || room.pricePerNight || 0;
+  const roomId = room._id || room.id;
+  const roomPrice = room.pricePerNight || 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!guestName || !document || !email || !nationality || !checkIn || !checkOut) {
-      alert('Por favor completa todos los campos del huésped.');
+
+    // 1. Validar campos obligatorios
+    if (
+      !guestName ||
+      !guestDocument ||
+      !guestEmail ||
+      !guestsCount ||
+      !checkIn ||
+      !checkOut
+    ) {
+      alert('Por favor completa todos los campos.');
       return;
     }
 
-    setLoading(true);
+    // 2. Validar cantidad de huéspedes
+    if (Number(guestsCount) > room.capacity) {
+      alert(
+        `Esta habitación tiene capacidad para máximo ${room.capacity} huésped(es).`
+      );
+      return;
+    }
 
+    // 3. Validar fechas
     const startDate = new Date(checkIn);
     const endDate = new Date(checkOut);
+
+    if (endDate <= startDate) {
+      alert('La fecha de Check-Out debe ser posterior al Check-In.');
+      return;
+    }
+
+    // 4. Calcular número de noches
     const timeDiff = endDate.getTime() - startDate.getTime();
-    const calculatedNights = Math.ceil(timeDiff / (1000 * 3600 * 24)) || 1;
+    const calculatedNights = Math.ceil(
+      timeDiff / (1000 * 60 * 60 * 24)
+    );
+
+    // 5. Calcular valor total
     const calculatedTotal = roomPrice * calculatedNights;
 
+    // 6. Buscar huésped registrado por documento
+    const guestsResponse = await fetch(
+      'http://127.0.0.1:5000/api/guests'
+    );
+
+    if (!guestsResponse.ok) {
+      throw new Error('No se pudieron consultar los huéspedes');
+    }
+
+    const guests = await guestsResponse.json();
+
+    const guest = guests.find(
+      (item) => item.document === guestDocument.trim()
+    );
+
+    if (!guest) {
+      alert(
+        'No existe un huésped registrado con ese documento. Regístralo primero en Gestión de Huéspedes.'
+      );
+      return;
+    }
+    // 7. Preparar información que coincide con Booking.js
     const bookingData = {
-  bookingCode: `RES-${Math.floor(1000 + Math.random() * 9000)}`,
-  room: room._id || room.id,
-  roomId: room._id || room.id,
-  roomNumber: room.number,
-  guestName,
-  customerName: guestName,
-  document,
-  identification: document,
-  email,
-  nationality,
-  checkIn,
-  checkOut,
-  startDate: checkIn,
-  endDate: checkOut,
-  nights: calculatedNights,
-  status: 'CONFIRMED',
-  totalAmount: calculatedTotal,
-  totalPrice: calculatedTotal
-};
+      bookingCode: `RES-${Math.floor(1000 + Math.random() * 9000)}`,
+      roomId,
+      guestId: guest._id,   
+      guestName,
+      guestDocument,
+      guestEmail,
+      guestsCount: Number(guestsCount),
+      checkIn,
+      checkOut,
+      totalAmount: calculatedTotal,
+      status: 'CONFIRMED'
+    };
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/bookings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookingData)
-      });
+      setLoading(true);
+      const guestsResponse = await fetch(
+  'http://127.0.0.1:5000/api/guests'
+);
 
-      if (response.ok) {
-        await fetch(`http://127.0.0.1:5000/api/rooms/${room._id || room.id}/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: 'OCCUPIED',
-            user: 'Recepción',
-            role: 'RECEPTIONIST'
-          })
-        });
+if (!guestsResponse.ok) {
+  throw new Error('No se pudieron consultar los huéspedes');
+}
 
-        if (onSaveBooking) onSaveBooking();
-        onClose();
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        alert(`Error al guardar la reserva: ${errorData.message || 'Comprueba la conexión con la base de datos.'}`);
+const guests = await guestsResponse.json();
+
+const guest = guests.find(
+  (item) => item.document === guestDocument.trim()
+);
+
+if (!guest) {
+  alert(
+    'No existe un huésped registrado con ese documento. Regístralo primero en Gestión de Huéspedes.'
+  );
+  return;
+}
+      // 7. Guardar la reserva
+      const response = await fetch(
+        'http://127.0.0.1:5000/api/bookings',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(bookingData)
+        }
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        alert(
+          `Error al guardar la reserva: ${
+            data.message || 'Comprueba la conexión con el servidor.'
+          }`
+        );
+        return;
       }
+
+      // 8. Actualizar la lista de habitaciones
+      if (onSaveBooking) {
+        onSaveBooking();
+      }
+
+      // 9. Cerrar modal
+      onClose();
+
+      alert(
+        `Reserva ${data.bookingCode || bookingData.bookingCode} creada correctamente.`
+      );
     } catch (error) {
       console.error('Error enviando reserva:', error);
       alert('No se pudo conectar con el servidor backend.');
@@ -82,81 +157,115 @@ export default function BookingModal({ room, onClose, onSaveBooking }) {
   };
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
-    }}>
-      <div style={{
-        backgroundColor: '#1e1e1e', padding: '24px', borderRadius: '12px',
-        width: '450px', color: '#fff', border: '1px solid #444', maxHeight: '90vh', overflowY: 'auto'
-      }}>
-        <h2>🔑 Check-In / Reserva - Hab. {room.number}</h2>
-        <p style={{ color: '#22c55e', fontWeight: 'bold', margin: '5px 0 15px 0' }}>
-          Precio por Noche: ${roomPrice.toLocaleString('es-CO')}
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>Registrar reserva</h2>
+
+        <p>
+          Habitación: <strong>{room.number}</strong>
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <p>
+          Tipo: <strong>{room.type}</strong>
+        </p>
+
+        <p>
+          Capacidad: <strong>{room.capacity} huésped(es)</strong>
+        </p>
+
+        <p>
+          Precio por noche:{' '}
+          <strong>${roomPrice.toLocaleString('es-CO')}</strong>
+        </p>
+
+        <form onSubmit={handleSubmit}>
           <div>
-            <label style={{ fontSize: '0.85rem' }}>Nombre Completo del Huésped:</label>
-            <input 
-              type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)}
-              placeholder="Ej. Juan Pérez"
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #555', backgroundColor: '#2d2d2d', color: '#fff' }}
+            <label>Nombre del huésped</label>
+            <input
+              type="text"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              placeholder="Nombre completo"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.85rem' }}>Documento / Cédula:</label>
-              <input 
-                type="text" value={document} onChange={(e) => setDocument(e.target.value)}
-                placeholder="Ej. 1098765432"
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #555', backgroundColor: '#2d2d2d', color: '#fff' }}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.85rem' }}>Nacionalidad:</label>
-              <input 
-                type="text" value={nationality} onChange={(e) => setNationality(e.target.value)}
-                placeholder="Ej. Colombiana"
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #555', backgroundColor: '#2d2d2d', color: '#fff' }}
-              />
-            </div>
-          </div>
-
           <div>
-            <label style={{ fontSize: '0.85rem' }}>Correo Electrónico (Email):</label>
-            <input 
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="juan.perez@email.com"
-              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #555', backgroundColor: '#2d2d2d', color: '#fff' }}
+            <label>Documento</label>
+            <input
+              type="text"
+              value={guestDocument}
+              onChange={(e) => setGuestDocument(e.target.value)}
+              placeholder="Número de documento"
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.85rem' }}>Check-In:</label>
-              <input 
-                type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #555', backgroundColor: '#2d2d2d', color: '#fff' }}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: '0.85rem' }}>Check-Out:</label>
-              <input 
-                type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)}
-                style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #555', backgroundColor: '#2d2d2d', color: '#fff' }}
-              />
-            </div>
+          <div>
+            <label>Correo electrónico</label>
+            <input
+              type="email"
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+              placeholder="correo@ejemplo.com"
+            />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px' }}>
-            <button type="button" onClick={onClose} style={{ padding: '10px 18px', borderRadius: '6px', border: 'none', backgroundColor: '#444', color: '#fff', cursor: 'pointer' }}>
+          <div>
+            <label>Cantidad de huéspedes</label>
+            <input
+              type="number"
+              min="1"
+              max={room.capacity}
+              value={guestsCount}
+              onChange={(e) => setGuestsCount(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label>Check-In</label>
+            <input
+              type="date"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label>Check-Out</label>
+            <input
+              type="date"
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <p>
+              Total:{' '}
+              <strong>
+                $
+                {(
+                  roomPrice *
+                  (checkIn && checkOut
+                    ? Math.max(
+                        0,
+                        Math.ceil(
+                          (new Date(checkOut) - new Date(checkIn)) /
+                            (1000 * 60 * 60 * 24)
+                        )
+                      )
+                    : 0)
+                ).toLocaleString('es-CO')}
+              </strong>
+            </p>
+          </div>
+
+          <div>
+            <button type="button" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
-            <button type="submit" disabled={loading} style={{ padding: '10px 18px', borderRadius: '6px', border: 'none', backgroundColor: '#22c55e', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>
-              {loading ? 'Guardando...' : 'Confirmar Check-In'}
+
+            <button type="submit" disabled={loading}>
+              {loading ? 'Guardando...' : 'Confirmar reserva'}
             </button>
           </div>
         </form>
