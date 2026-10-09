@@ -1,31 +1,46 @@
 import { useEffect, useState } from 'react';
+import Sidebar from '../components/Sidebar.jsx';
+import './ReceptionPages.css';
+
+const API_URL = 'http://127.0.0.1:5000/api';
+
+const formatCurrency = (value) =>
+  Number(value || 0).toLocaleString('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  });
 
 export default function PaymentsPage() {
   const [bookings, setBookings] = useState([]);
   const [selectedBooking, setSelectedBooking] = useState(null);
-
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
-
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [search, setSearch] = useState('');
 
   const fetchBookings = async () => {
     try {
-      const response = await fetch(
-        'http://127.0.0.1:5000/api/bookings'
-      );
+      setFetching(true);
+      setErrorMessage('');
+
+      const response = await fetch(`${API_URL}/bookings`);
 
       if (!response.ok) {
-        throw new Error('No se pudieron obtener las reservas');
+        throw new Error('No se pudieron obtener las reservas.');
       }
 
       const data = await response.json();
-
       setBookings(data);
     } catch (error) {
       console.error('Error obteniendo reservas:', error);
-
-      alert('No se pudieron cargar las reservas.');
+      setErrorMessage(
+        'No fue posible cargar las reservas. Comprueba que el servidor esté funcionando.'
+      );
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -37,352 +52,425 @@ export default function PaymentsPage() {
     const total = Number(booking.totalAmount || 0);
     const paid = Number(booking.totalPaid || 0);
 
-    return total - paid;
+    return Math.max(0, total - paid);
   };
 
-  const handleRegisterPayment = async (e) => {
-    e.preventDefault();
+  const filteredBookings = bookings.filter((booking) => {
+    const searchText = search.trim().toLowerCase();
 
-    if (!selectedBooking) {
-      return;
-    }
+    return [
+      booking.bookingCode,
+      booking.guestName,
+      booking.roomId?.number,
+    ].some((value) =>
+      String(value ?? '').toLowerCase().includes(searchText)
+    );
+  });
+
+  const totalPending = bookings.reduce(
+    (total, booking) => total + getPendingAmount(booking),
+    0
+  );
+
+  const totalCollected = bookings.reduce(
+    (total, booking) => total + Number(booking.totalPaid || 0),
+    0
+  );
+
+  const openPaymentForm = (booking) => {
+    setSelectedBooking(booking);
+    setAmount('');
+    setPaymentMethod('CASH');
+  };
+
+  const closePaymentForm = () => {
+    if (loading) return;
+
+    setSelectedBooking(null);
+    setAmount('');
+    setPaymentMethod('CASH');
+  };
+
+  const handleRegisterPayment = async (event) => {
+    event.preventDefault();
+
+    if (!selectedBooking) return;
 
     const paymentAmount = Number(amount);
+    const pendingAmount = getPendingAmount(selectedBooking);
 
-    if (!paymentAmount || paymentAmount <= 0) {
-      alert('Ingresa un valor válido.');
+    if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+      window.alert('Ingresa un valor de pago válido.');
       return;
     }
 
-    const pendingAmount = getPendingAmount(selectedBooking);
-
     if (paymentAmount > pendingAmount) {
-      alert(
-        `El pago no puede superar el saldo pendiente de $${pendingAmount.toLocaleString(
-          'es-CO'
+      window.alert(
+        `El pago no puede superar el saldo pendiente de ${formatCurrency(
+          pendingAmount
         )}.`
       );
-
       return;
     }
 
     try {
       setLoading(true);
 
-      const response = await fetch(
-        'http://127.0.0.1:5000/api/payments',
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json'
-          },
-
-          body: JSON.stringify({
-            bookingId: selectedBooking._id,
-            amount: paymentAmount,
-            paymentMethod,
-            receivedBy: 'Recepción',
-            role: 'RECEPTIONIST'
-          })
-        }
-      );
+      const response = await fetch(`${API_URL}/payments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: selectedBooking._id,
+          amount: paymentAmount,
+          paymentMethod,
+          receivedBy: 'Recepción',
+          role: 'RECEPTIONIST',
+        }),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.details || data.error || 'No se pudo registrar el pago'
+          data.details ||
+            data.error ||
+            'No se pudo registrar el pago.'
         );
       }
 
-      alert('Pago registrado correctamente.');
+      window.alert('Pago registrado correctamente.');
 
-      setAmount('');
       setSelectedBooking(null);
+      setAmount('');
+      setPaymentMethod('CASH');
 
       await fetchBookings();
-
     } catch (error) {
       console.error('Error registrando pago:', error);
-
-      alert(error.message);
-
+      window.alert(error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        padding: '30px',
-        fontFamily: 'Arial, sans-serif'
-      }}
-    >
-      <div style={{ marginBottom: '30px' }}>
-        <h1>💳 Gestión de Pagos</h1>
+    <div className="pms-layout">
+      <Sidebar />
 
-        <p style={{ color: '#666' }}>
-          Consulta saldos y registra pagos de las reservas.
-        </p>
-      </div>
+      <main className="pms-main">
+        <div className="reception-content">
+          <header className="page-header">
+            <div>
+              <p className="page-eyebrow">Grand Hotel · Recepción</p>
+              <h1 className="page-title">Gestión de Pagos</h1>
+              <p className="page-description">
+                Consulta los saldos de las reservas y registra los
+                pagos de los huéspedes.
+              </p>
+            </div>
 
-      {bookings.length === 0 ? (
-        <p>No hay reservas registradas.</p>
-      ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns:
-              'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: '20px'
-          }}
-        >
-          {bookings.map((booking) => {
-            const pendingAmount = getPendingAmount(booking);
+            <button
+              type="button"
+              className="page-button page-button-secondary"
+              onClick={fetchBookings}
+              disabled={fetching}
+            >
+              {fetching ? 'Actualizando...' : '↻ Actualizar'}
+            </button>
+          </header>
 
-            return (
-              <div
-                key={booking._id}
-                style={{
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '10px',
-                  padding: '20px',
-                  backgroundColor: '#fff',
-                  boxShadow:
-                    '0 2px 5px rgba(0,0,0,0.08)'
-                }}
-              >
-                <h3>
-                  📋 {booking.bookingCode}
-                </h3>
+          <section className="payment-summary">
+            <div className="payment-summary-item">
+              <span className="payment-summary-label">
+                Reservas registradas
+              </span>
+              <strong className="payment-summary-value">
+                {bookings.length}
+              </strong>
+            </div>
 
-                <p>
-                  <strong>Huésped:</strong>{' '}
-                  {booking.guestName}
+            <div className="payment-summary-item">
+              <span className="payment-summary-label">
+                Total recaudado
+              </span>
+              <strong className="payment-summary-value">
+                {formatCurrency(totalCollected)}
+              </strong>
+            </div>
+
+            <div className="payment-summary-item">
+              <span className="payment-summary-label">
+                Saldo pendiente total
+              </span>
+              <strong className="payment-summary-value">
+                {formatCurrency(totalPending)}
+              </strong>
+            </div>
+          </section>
+
+          <section>
+            <div className="page-toolbar">
+              <div>
+                <h2 className="page-section-title">
+                  Estado de las reservas
+                </h2>
+                <p className="page-count">
+                  {filteredBookings.length}{' '}
+                  {filteredBookings.length === 1
+                    ? 'reserva encontrada'
+                    : 'reservas encontradas'}
                 </p>
-
-                <p>
-                  <strong>Habitación:</strong>{' '}
-                  {booking.roomId?.number ||
-                    'No disponible'}
-                </p>
-
-                <hr />
-
-                <p>
-                  <strong>Total:</strong>{' '}
-                  ${Number(
-                    booking.totalAmount || 0
-                  ).toLocaleString('es-CO')}
-                </p>
-
-                <p>
-                  <strong>Pagado:</strong>{' '}
-                  ${Number(
-                    booking.totalPaid || 0
-                  ).toLocaleString('es-CO')}
-                </p>
-
-                <p
-                  style={{
-                    fontWeight: 'bold',
-                    color:
-                      pendingAmount === 0
-                        ? '#16a34a'
-                        : '#dc2626'
-                  }}
-                >
-                  {pendingAmount === 0
-                    ? '✅ PAGADO'
-                    : `💰 Saldo pendiente: $${pendingAmount.toLocaleString(
-                        'es-CO'
-                      )}`}
-                </p>
-
-                {pendingAmount > 0 && (
-                  <button
-                    onClick={() =>
-                      setSelectedBooking(booking)
-                    }
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      backgroundColor: '#2563eb',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    💳 Registrar pago
-                  </button>
-                )}
               </div>
-            );
-          })}
+
+              <input
+                className="page-search"
+                type="search"
+                placeholder="Buscar reserva, huésped o habitación..."
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                aria-label="Buscar reservas por código, huésped o habitación"
+              />
+            </div>
+
+            {fetching ? (
+              <div className="empty-state">
+                <p>Cargando información de pagos...</p>
+              </div>
+            ) : errorMessage ? (
+              <div className="empty-state">
+                <h3>No se pudieron cargar los datos</h3>
+                <p>{errorMessage}</p>
+                <button
+                  type="button"
+                  className="page-button"
+                  onClick={fetchBookings}
+                  style={{ marginTop: 16 }}
+                >
+                  Reintentar
+                </button>
+              </div>
+            ) : filteredBookings.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-state-icon">＄</div>
+                <h3>
+                  {search
+                    ? 'No encontramos reservas'
+                    : 'Aún no hay reservas'}
+                </h3>
+                <p>
+                  {search
+                    ? 'Prueba con otro código, nombre o número de habitación.'
+                    : 'Cuando existan reservas, su información de pagos aparecerá aquí.'}
+                </p>
+              </div>
+            ) : (
+              <div className="page-grid">
+                {filteredBookings.map((booking) => {
+                  const pendingAmount = getPendingAmount(booking);
+                  const isPaid = pendingAmount === 0;
+
+                  return (
+                    <article className="page-card" key={booking._id}>
+                      <div className="guest-card-header">
+                        <div className="guest-avatar" aria-hidden="true">
+                          ＄
+                        </div>
+
+                        <div style={{ minWidth: 0 }}>
+                          <h3 className="payment-card-code">
+                            {booking.bookingCode || 'Reserva'}
+                          </h3>
+                          <p className="payment-card-guest">
+                            {booking.guestName || 'Huésped no disponible'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="page-detail">
+                        <span className="page-detail-label">
+                          Habitación
+                        </span>
+                        <span className="page-detail-value">
+                          {booking.roomId?.number || 'No disponible'}
+                        </span>
+                      </div>
+
+                      <div className="page-detail">
+                        <span className="page-detail-label">
+                          Total de la reserva
+                        </span>
+                        <span className="page-detail-value">
+                          {formatCurrency(booking.totalAmount)}
+                        </span>
+                      </div>
+
+                      <div className="page-detail">
+                        <span className="page-detail-label">
+                          Total pagado
+                        </span>
+                        <span className="page-detail-value">
+                          {formatCurrency(booking.totalPaid)}
+                        </span>
+                      </div>
+
+                      <div className="payment-balance">
+                        <div>
+                          <span className="payment-balance-label">
+                            {isPaid ? 'Estado del pago' : 'Saldo pendiente'}
+                          </span>
+                          <div
+                            className="payment-balance-value"
+                            style={{
+                              color: isPaid ? '#326844' : '#8B6528',
+                              marginTop: 5,
+                            }}
+                          >
+                            {isPaid
+                              ? 'Pagado'
+                              : formatCurrency(pendingAmount)}
+                          </div>
+                        </div>
+
+                        <span
+                          className={`status-pill ${
+                            isPaid ? 'status-paid' : 'status-pending'
+                          }`}
+                        >
+                          {isPaid ? 'Al día' : 'Pendiente'}
+                        </span>
+                      </div>
+
+                      {!isPaid && (
+                        <button
+                          type="button"
+                          className="page-button card-action"
+                          onClick={() => openPaymentForm(booking)}
+                        >
+                          Registrar pago
+                        </button>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         </div>
-      )}
+      </main>
 
       {selectedBooking && (
         <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor:
-              'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
+          className="modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closePaymentForm();
+            }
           }}
         >
-          <div
-            style={{
-              backgroundColor: '#fff',
-              width: '90%',
-              maxWidth: '450px',
-              borderRadius: '10px',
-              padding: '25px'
-            }}
+          <section
+            className="modal-panel modal-panel-compact"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="payment-title"
           >
-            <h2>💳 Registrar pago</h2>
+            <div className="modal-header">
+              <div>
+                <h2 className="modal-title" id="payment-title">
+                  Registrar pago
+                </h2>
+                <p className="modal-subtitle">
+                  Registra el abono de la reserva seleccionada.
+                </p>
+              </div>
 
-            <p>
-              <strong>Reserva:</strong>{' '}
-              {selectedBooking.bookingCode}
-            </p>
+              <button
+                type="button"
+                className="page-button page-button-secondary"
+                onClick={closePaymentForm}
+                disabled={loading}
+                aria-label="Cerrar formulario"
+              >
+                ✕
+              </button>
+            </div>
 
-            <p>
-              <strong>Huésped:</strong>{' '}
-              {selectedBooking.guestName}
-            </p>
+            <div className="history-card">
+              <div className="page-detail">
+                <span className="page-detail-label">Reserva</span>
+                <strong className="page-detail-value">
+                  {selectedBooking.bookingCode || 'Sin código'}
+                </strong>
+              </div>
 
-            <p>
-              <strong>Saldo pendiente:</strong>{' '}
-              $
-              {getPendingAmount(
-                selectedBooking
-              ).toLocaleString('es-CO')}
-            </p>
+              <div className="page-detail">
+                <span className="page-detail-label">Huésped</span>
+                <span className="page-detail-value">
+                  {selectedBooking.guestName || 'No disponible'}
+                </span>
+              </div>
 
-            <form
-              onSubmit={handleRegisterPayment}
-            >
-              <div style={{ marginBottom: '15px' }}>
-                <label>
-                  Valor del pago
-                </label>
+              <div className="page-detail">
+                <span className="page-detail-label">Saldo pendiente</span>
+                <strong className="page-detail-value">
+                  {formatCurrency(getPendingAmount(selectedBooking))}
+                </strong>
+              </div>
+            </div>
 
+            <form onSubmit={handleRegisterPayment}>
+              <div className="form-field" style={{ marginBottom: 18 }}>
+                <label htmlFor="payment-amount">Valor del pago (COP)</label>
                 <input
+                  id="payment-amount"
+                  className="page-input"
                   type="number"
                   min="1"
-                  max={getPendingAmount(
-                    selectedBooking
-                  )}
+                  max={getPendingAmount(selectedBooking)}
+                  step="1"
                   value={amount}
-                  onChange={(e) =>
-                    setAmount(e.target.value)
-                  }
+                  onChange={(event) => setAmount(event.target.value)}
+                  placeholder="Ingresa el valor"
                   required
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    marginTop: '6px',
-                    boxSizing: 'border-box',
-                    border:
-                      '1px solid #cbd5e1',
-                    borderRadius: '6px'
-                  }}
                 />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label>
-                  Método de pago
-                </label>
-
+              <div className="form-field">
+                <label htmlFor="payment-method">Método de pago</label>
                 <select
+                  id="payment-method"
+                  className="page-select"
                   value={paymentMethod}
-                  onChange={(e) =>
-                    setPaymentMethod(
-                      e.target.value
-                    )
-                  }
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    marginTop: '6px',
-                    border:
-                      '1px solid #cbd5e1',
-                    borderRadius: '6px'
-                  }}
+                  onChange={(event) => setPaymentMethod(event.target.value)}
+                  required
                 >
-                  <option value="CASH">
-                    💵 Efectivo
-                  </option>
-
-                  <option value="CARD">
-                    💳 Tarjeta
-                  </option>
-
-                  <option value="TRANSFER">
-                    🏦 Transferencia
-                  </option>
+                  <option value="CASH">Efectivo</option>
+                  <option value="CARD">Tarjeta</option>
+                  <option value="TRANSFER">Transferencia</option>
                 </select>
               </div>
 
-              <div
-                style={{
-                  display: 'flex',
-                  gap: '10px'
-                }}
-              >
+              <div className="form-actions">
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedBooking(null);
-                    setAmount('');
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    backgroundColor: '#6b7280',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
+                  className="page-button page-button-secondary"
+                  onClick={closePaymentForm}
+                  disabled={loading}
                 >
                   Cancelar
                 </button>
 
                 <button
                   type="submit"
+                  className="page-button"
                   disabled={loading}
-                  style={{
-                    flex: 1,
-                    padding: '10px',
-                    backgroundColor: '#16a34a',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
                 >
-                  {loading
-                    ? 'Guardando...'
-                    : '💾 Registrar pago'}
+                  {loading ? 'Guardando...' : 'Confirmar pago'}
                 </button>
               </div>
             </form>
-          </div>
+          </section>
         </div>
       )}
     </div>

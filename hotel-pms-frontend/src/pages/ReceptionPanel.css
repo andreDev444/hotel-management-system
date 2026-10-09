@@ -1,0 +1,379 @@
+
+/* Panel principal */
+.pms-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-cream);
+  color: var(--color-text);
+}
+
+.pms-layout .sidebar {
+  flex: 0 0 250px;
+  min-height: 100vh;
+}
+
+.pms-main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+}
+
+.reception-content {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Encabezado */
+.reception-header {
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.reception-header h1 {
+  margin: 0 0 8px;
+  color: var(--color-coffee);
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.reception-header p {
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.reception-loading {
+  padding: 40px 20px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+/* Distribución de habitaciones */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* Tarjeta */
+.room-card {
+  min-width: 0;
+  padding: 22px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-top: 4px solid var(--status-color, var(--color-sand));
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(92, 64, 51, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 22px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.room-card:hover {
+  box-shadow: 0 8px 22px rgba(92, 64, 51, 0.10);
+  transform: translateY(-2px);
+}
+
+.room-card-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.room-card-heading h3 {
+  margin: 0;
+  color: var(--color-coffee);
+  font-family: var(--font-heading);
+  font-size: 25px;
+  font-weight: 600;
+}
+
+/* Etiqueta del estado */
+.room-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: var(--status-bg);
+  color: var(--status-color);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--status-color);
+}
+
+/* Información */
+.room-detail {
+  margin: 8px 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.room-detail strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.room-price {
+  margin: 12px 0 20px;
+  color: var(--color-taupe);
+  font-size: 13px;
+}
+
+.room-price strong {
+  color: var(--color-coffee);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.room-price span {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+/* Selector de estado */
+.room-status-control {
+  margin-bottom: 4px;
+}
+
+.room-status-control label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--color-taupe);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.room-status-control select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  outline-color: var(--color-taupe);
+  background: var(--color-cream);
+  color: var(--color-coffee);
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.room-status-control select:focus {
+  border-color: var(--color-taupe);
+}
+
+/* Botones */
+.room-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.action-button {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+}
+
+.button-coffee {
+  background: var(--color-coffee);
+  color: var(--color-white);
+}
+
+.button-coffee:hover {
+  background: #493126;
+}
+
+.button-sand {
+  background: var(--color-sand);
+  color: var(--color-coffee);
+}
+
+.button-sand:hover {
+  background: #CCB493;
+}
+
+.button-taupe {
+  background: var(--color-taupe);
+  color: var(--color-white);
+}
+
+.button-taupe:hover {
+  background: #786A60;
+}
+
+.button-success {
+  background: #587653;
+  color: var(--color-white);
+}
+
+.button-success:hover {
+  background: #466143;
+}
+
+.button-danger {
+  background: #A34F45;
+  color: var(--color-white);
+}
+
+.button-danger:hover {
+  background: #8F4038;
+}
+
+.button-light {
+  background: var(--color-soft-gray);
+  color: var(--color-coffee);
+  border-color: var(--color-border);
+}
+
+/* Modal de consumos */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: rgba(48, 35, 28, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.consumption-modal {
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-cream);
+  box-shadow: 0 16px 50px rgba(48, 35, 28, 0.2);
+}
+
+.consumption-modal h2 {
+  margin: 0;
+  color: var(--color-coffee);
+  font-family: var(--font-heading);
+  font-size: 29px;
+}
+
+.consumption-subtitle {
+  margin-top: 5px;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.consumption-form {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.consumption-form label {
+  color: var(--color-taupe);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.consumption-form input {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 11px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  outline-color: var(--color-taupe);
+  background: var(--color-white);
+  color: var(--color-coffee);
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+.consumption-form input::placeholder {
+  color: #A79D95;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.modal-actions .action-button {
+  width: auto;
+  min-width: 105px;
+}
+
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 768px) {
+  .pms-layout .sidebar {
+    flex: 0 0 190px;
+    width: 190px;
+  }
+
+  .pms-main {
+    padding: 20px 16px;
+  }
+
+  .reception-header h1 {
+    font-size: 30px;
+  }
+
+  .rooms-grid {
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+  }
+
+  .room-card {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .pms-layout .sidebar {
+    flex-basis: 150px;
+    width: 150px;
+    padding: 18px 8px;
+  }
+
+  .pms-main {
+    padding: 18px 10px;
+  }
+
+  .rooms-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .room-card-heading {
+    align-items: flex-start;
+  }
+
+  .consumption-modal {
+    padding: 22px;
+  }
+}

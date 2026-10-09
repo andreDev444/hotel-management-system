@@ -1,0 +1,162 @@
+
+.sidebar {
+  width: 250px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 28px 18px;
+  background: var(--color-cream);
+  border-right: 1px solid var(--color-border);
+  color: var(--color-coffee);
+  font-family: var(--font-body);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px 34px;
+}
+
+.sidebar-logo {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--color-coffee);
+  color: var(--color-cream);
+  font-family: var(--font-heading);
+  font-size: 29px;
+  font-weight: 600;
+}
+
+.sidebar-brand h2 {
+  margin: 0 0 3px;
+  color: var(--color-coffee);
+  font-family: var(--font-heading);
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-brand span,
+.sidebar-footer span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.sidebar-section-title {
+  padding: 0 10px;
+  margin-bottom: 12px;
+  color: var(--color-taupe);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px;
+  border-radius: 9px;
+  color: var(--color-muted);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-link:hover {
+  background: var(--color-soft-gray);
+  color: var(--color-coffee);
+}
+
+.sidebar-link.active {
+  background: #EDE3D7;
+  color: var(--color-coffee);
+  font-weight: 700;
+}
+
+.sidebar-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 19px;
+}
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: auto;
+  padding: 20px 8px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-sand);
+  color: var(--color-coffee);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sidebar-footer strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-coffee);
+  font-size: 12px;
+}
+
+/* Estructura general del PMS */
+.pms-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-cream);
+  color: var(--color-text);
+}
+
+.pms-layout .sidebar {
+  flex: 0 0 250px;
+  min-height: 100vh;
+}
+
+.pms-main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+  box-sizing: border-box;
+}
+
+.reception-content {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .pms-layout .sidebar {
+    width: 190px;
+    flex-basis: 190px;
+    padding: 22px 12px;
+  }
+
+  .pms-main {
+    padding: 18px;
+  }
+}
