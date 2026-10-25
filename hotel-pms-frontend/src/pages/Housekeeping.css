@@ -1,0 +1,365 @@
+
+/* ========================================
+   MÓDULO DE PERSONAL DE ASEO
+   ======================================== */
+
+.housekeeping-layout {
+  background: var(--color-cream, #FAF8F3);
+  color: var(--color-text, #51463F);
+}
+
+.housekeeping-content {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Encabezado */
+
+.housekeeping-header {
+  align-items: flex-start;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border, #E8E1D8);
+}
+
+.housekeeping-header .page-description {
+  max-width: 620px;
+}
+
+/* Resumen de habitaciones */
+
+.hk-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 36px;
+}
+
+.hk-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  padding: 23px;
+  background: #FFFEFC;
+  border: 1px solid var(--color-border, #E8E1D8);
+  border-radius: 13px;
+  box-shadow: 0 4px 14px rgba(92, 64, 51, 0.04);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.hk-summary-card:hover {
+  box-shadow: 0 8px 22px rgba(92, 64, 51, 0.08);
+  transform: translateY(-2px);
+}
+
+.hk-summary-label {
+  color: var(--color-muted, #8B8179);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.hk-summary-card strong {
+  color: var(--color-coffee, #5C4033);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.hk-summary-detail {
+  color: var(--color-muted, #8B8179);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Sección de habitaciones */
+
+.hk-section {
+  margin-bottom: 32px;
+}
+
+.hk-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.hk-section-heading h2 {
+  margin: 0 0 7px;
+  color: var(--color-coffee, #5C4033);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 25px;
+  font-weight: 600;
+}
+
+.hk-section-heading p {
+  margin: 0;
+  color: var(--color-muted, #8B8179);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.hk-room-count {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  color: var(--color-coffee, #5C4033);
+  background: #EDE3D7;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Tarjetas */
+
+.hk-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: 18px;
+}
+
+.hk-room-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px;
+  background: #FFFEFC;
+  border: 1px solid var(--color-border, #E8E1D8);
+  border-radius: 13px;
+  box-shadow: 0 4px 14px rgba(92, 64, 51, 0.04);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.hk-room-card:hover {
+  box-shadow: 0 8px 22px rgba(92, 64, 51, 0.09);
+  transform: translateY(-2px);
+}
+
+.hk-room-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hk-room-number-label {
+  color: var(--color-muted, #8B8179);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+}
+
+.hk-room-top h3 {
+  margin: 6px 0 0;
+  color: var(--color-coffee, #5C4033);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 30px;
+  font-weight: 600;
+}
+
+/* Estados */
+
+.hk-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 150px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.hk-status-available {
+  color: #276749;
+  background: #E3F3E9;
+}
+
+.hk-status-cleaning {
+  color: #98500F;
+  background: #FFF0DF;
+}
+
+.hk-status-occupied {
+  color: #28568A;
+  background: #E6EFFA;
+}
+
+.hk-status-reserved {
+  color: #80620C;
+  background: #FBF1C9;
+}
+
+.hk-status-out-of-service {
+  color: #A83232;
+  background: #FAE7E5;
+}
+
+.hk-status-unknown {
+  color: #5D554D;
+  background: #EEE9E2;
+}
+
+/* Detalles de habitación */
+
+.hk-room-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 0;
+  border-top: 1px solid var(--color-border, #E8E1D8);
+  border-bottom: 1px solid var(--color-border, #E8E1D8);
+}
+
+.hk-room-details span {
+  color: var(--color-muted, #8B8179);
+  font-size: 12px;
+}
+
+.hk-room-details strong {
+  color: var(--color-coffee, #5C4033);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Botones */
+
+.hk-room-card .page-button {
+  width: 100%;
+  min-height: 42px;
+  white-space: normal;
+}
+
+.hk-room-card .page-button:focus-visible {
+  outline: 3px solid rgba(139, 125, 114, 0.35);
+  outline-offset: 2px;
+}
+
+/* Formulario de reporte de daños */
+
+.hk-report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding-top: 4px;
+}
+
+.hk-report-form label {
+  color: var(--color-coffee, #5C4033);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hk-report-form textarea {
+  width: 100%;
+  min-height: 95px;
+  padding: 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border, #E8E1D8);
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: var(--color-text, #51463F);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.hk-report-form textarea:focus {
+  border-color: var(--color-taupe, #8B7D72);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 125, 114, 0.12);
+}
+
+.hk-report-form textarea::placeholder {
+  color: #A59A90;
+}
+
+/* Aviso de habitación fuera de servicio */
+
+.hk-room-note {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #EDC5C1;
+  border-radius: 8px;
+  background: #FAE7E5;
+  color: #8B3434;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Mensajes de éxito y error */
+
+.hk-alert {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.hk-alert-error {
+  border: 1px solid #EDC5C1;
+  background: #FAE7E5;
+  color: #8B3434;
+}
+
+.hk-alert-success {
+  border: 1px solid #C4E5D0;
+  background: #E3F3E9;
+  color: #276749;
+}
+
+/* Adaptación a pantallas pequeñas */
+
+@media (max-width: 900px) {
+  .hk-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .hk-summary {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .hk-summary-card {
+    padding: 19px;
+  }
+
+  .hk-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hk-room-grid {
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(220px, 1fr)
+    );
+  }
+}
+
+@media (max-width: 480px) {
+  .hk-room-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hk-room-card {
+    padding: 18px;
+  }
+
+  .hk-room-top {
+    flex-wrap: wrap;
+  }
+
+  .hk-room-top h3 {
+    font-size: 27px;
+  }
+}

@@ -10,7 +10,7 @@ const AuditLog = require('./models/AuditLog');
 const Guest = require('./models/Guest');
 const logAudit = require('./middlewares/audit.js');
 const Payment = require('./models/Payment');
-
+const Incident = require('./models/Incident');
 // ======================================================
 // CONFIGURACIÓN
 // ======================================================
@@ -539,6 +539,164 @@ app.post('/api/bookings', async (req, res) => {
 
     res.status(400).json({
       message: 'Error al guardar reserva en base de datos',
+      details: err.message
+    });
+  }
+});
+
+
+ // ======================================================
+ // INCIDENCIAS Y REPORTES DE DAÑOS
+ // ======================================================
+
+// Obtener incidencias
+app.get('/api/incidents', async (req, res) => {
+  try {
+    const { status, roomId } = req.query;
+    const filters = {};
+
+    if (status) {
+      filters.status = status;
+    }
+
+    if (roomId) {
+      filters.roomId = roomId;
+    }
+
+    const incidents = await Incident.find(filters)
+      .populate('roomId', 'number type')
+      .sort({ createdAt: -1 });
+
+    res.json(incidents);
+  } catch (err) {
+    console.error('Error obteniendo incidencias:', err);
+    res.status(500).json({
+      error: 'No se pudieron obtener las incidencias'
+    });
+  }
+});
+
+// Crear incidencia
+app.post('/api/incidents', async (req, res) => {
+  try {
+    const {
+      roomId,
+      description,
+      reportedBy,
+      role,
+      priority
+    } = req.body;
+
+    if (
+      !roomId ||
+      !description ||
+      !description.trim() ||
+      !reportedBy
+    ) {
+      return res.status(400).json({
+        error: 'Habitación, descripción y responsable son obligatorios'
+      });
+    }
+
+    const room = await Room.findById(roomId);
+
+    if (!room) {
+      return res.status(404).json({
+        error: 'La habitación no existe'
+      });
+    }
+
+    const incident = await Incident.create({
+      roomId: room._id,
+      roomNumber: room.number,
+      description: description.trim(),
+      reportedBy,
+      role: role || 'HOUSEKEEPING',
+      priority: priority || 'MEDIUM'
+    });
+
+    // Una incidencia de daño deja la habitación fuera de servicio.
+    room.status = 'OUT_OF_SERVICE';
+    await room.save();
+
+    await logAudit(
+      reportedBy,
+      role || 'HOUSEKEEPING',
+      `Reportó una incidencia en la habitación ${room.number}`,
+      {
+        incidentId: incident._id,
+        description: incident.description,
+        priority: incident.priority
+      }
+    );
+
+    res.status(201).json({
+      message: 'Incidencia registrada correctamente',
+      incident
+    });
+  } catch (err) {
+    console.error('Error creando incidencia:', err);
+    res.status(400).json({
+      error: 'No se pudo registrar la incidencia',
+      details: err.message
+    });
+  }
+});
+
+// Actualizar estado de una incidencia
+app.patch('/api/incidents/:id', async (req, res) => {
+  try {
+    const { status, resolutionNotes, updatedBy } = req.body;
+
+    const allowedStatuses = [
+      'PENDING',
+      'IN_PROGRESS',
+      'RESOLVED'
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        error: 'El estado de la incidencia no es válido'
+      });
+    }
+
+    const incident = await Incident.findById(req.params.id);
+
+    if (!incident) {
+      return res.status(404).json({
+        error: 'Incidencia no encontrada'
+      });
+    }
+
+    incident.status = status;
+
+    if (resolutionNotes !== undefined) {
+      incident.resolutionNotes = resolutionNotes;
+    }
+
+    if (status === 'RESOLVED') {
+      incident.resolvedAt = new Date();
+    } else {
+      incident.resolvedAt = null;
+    }
+
+    await incident.save();
+
+    await logAudit(
+      updatedBy || 'Empleado',
+      'STAFF',
+      `Actualizó incidencia de habitación ${incident.roomNumber} a ${status}`,
+      { incidentId: incident._id }
+    );
+
+    res.json({
+      message: 'Incidencia actualizada correctamente',
+      incident
+    });
+  } catch (err) {
+    console.error('Error actualizando incidencia:', err);
+    res.status(400).json({
+      error: 'No se pudo actualizar la incidencia',
       details: err.message
     });
   }
