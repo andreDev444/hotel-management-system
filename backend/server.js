@@ -156,28 +156,45 @@ app.post('/api/rooms', async (req, res) => {
 // Cambiar estado de habitación
 app.patch('/api/rooms/:id/status', async (req, res) => {
   try {
-    const {
-      status,
-      user,
-      role,
-      reason
-    } = req.body;
+    const { status, user, role, reason } = req.body;
 
-    const room = await Room.findByIdAndUpdate(
-      req.params.id,
-      {
-        status
-      },
-      {
-        new: true
-      }
-    );
+    const allowedStatuses = [
+      'AVAILABLE',
+      'CLEANING',
+      'OCCUPIED',
+      'RESERVED',
+      'OUT_OF_SERVICE'
+    ];
 
-    if (!room) {
-      return res.status(404).json({
-        error: 'Habitación no encontrada'
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        error: 'El estado de habitación no es válido.'
       });
     }
+
+    const existingRoom = await Room.findById(req.params.id);
+
+    if (!existingRoom) {
+      return res.status(404).json({
+        error: 'Habitación no encontrada.'
+      });
+    }
+
+    // El personal de aseo no puede habilitar directamente
+    // una habitación que continúa fuera de servicio.
+    if (
+      role === 'HOUSEKEEPING' &&
+      existingRoom.status === 'OUT_OF_SERVICE' &&
+      status === 'AVAILABLE'
+    ) {
+      return res.status(403).json({
+        error:
+          'La habitación debe ser revisada y reparada antes de habilitarse.'
+      });
+    }
+
+    existingRoom.status = status;
+    const room = await existingRoom.save();
 
     let actionText = `Marcó habitación ${room.number} como ${status}`;
 
@@ -189,14 +206,14 @@ app.patch('/api/rooms/:id/status', async (req, res) => {
       user || 'Empleado',
       role || 'STAFF',
       actionText,
-      {
-        reason
-      }
+      { reason }
     );
 
-    res.json(room);
+    return res.json(room);
   } catch (err) {
-    res.status(400).json({
+    console.error('Error al cambiar estado de habitación:', err);
+
+    return res.status(400).json({
       error: err.message
     });
   }
@@ -643,10 +660,11 @@ app.post('/api/incidents', async (req, res) => {
   }
 });
 
-// Actualizar estado de una incidencia
+
+ // Actualizar estado de una incidencia
 app.patch('/api/incidents/:id', async (req, res) => {
   try {
-    const { status, resolutionNotes, updatedBy } = req.body;
+    const { status, resolutionNotes, updatedBy, role } = req.body;
 
     const allowedStatuses = [
       'PENDING',
@@ -668,35 +686,128 @@ app.patch('/api/incidents/:id', async (req, res) => {
       });
     }
 
+    // No permitir reabrir una incidencia después de autorizar
+    // la recuperación de su habitación.
+    const room = await Room.findById(incident.roomId);
+
+    if (
+      room &&
+      room.status !== 'OUT_OF_SERVICE' &&
+      status !== 'RESOLVED'
+    ) {
+      return res.status(400).json({
+        error: 'No se puede reabrir esta incidencia desde esta ruta.'
+      });
+    }
+
     incident.status = status;
 
     if (resolutionNotes !== undefined) {
       incident.resolutionNotes = resolutionNotes;
     }
 
-    if (status === 'RESOLVED') {
-      incident.resolvedAt = new Date();
-    } else {
-      incident.resolvedAt = null;
-    }
+    incident.resolvedAt =
+      status === 'RESOLVED' ? new Date() : null;
 
     await incident.save();
 
     await logAudit(
       updatedBy || 'Empleado',
-      'STAFF',
+      role || 'STAFF',
       `Actualizó incidencia de habitación ${incident.roomNumber} a ${status}`,
       { incidentId: incident._id }
     );
 
-    res.json({
+    return res.json({
       message: 'Incidencia actualizada correctamente',
       incident
     });
   } catch (err) {
     console.error('Error actualizando incidencia:', err);
-    res.status(400).json({
+
+    return res.status(400).json({
       error: 'No se pudo actualizar la incidencia',
+      details: err.message
+    });
+  }
+});
+
+// Autorizar la recuperación de una habitación
+app.patch('/api/incidents/:id/authorize-recovery', async (req, res) => {
+  try {
+    const { authorizedBy, role } = req.body;
+
+    const authorizedRoles = [
+      'RECEPTIONIST',
+      'MANAGER',
+      'ADMIN'
+    ];
+
+    if (!authorizedRoles.includes(role)) {
+      return res.status(403).json({
+        error: 'Solo recepción, gerencia o administración pueden autorizar la recuperación.'
+      });
+    }
+
+    if (!authorizedBy || !authorizedBy.trim()) {
+      return res.status(400).json({
+        error: 'Debes indicar quién autoriza la recuperación.'
+      });
+    }
+
+    const incident = await Incident.findById(req.params.id);
+
+    if (!incident) {
+      return res.status(404).json({
+        error: 'Incidencia no encontrada.'
+      });
+    }
+
+    if (incident.status !== 'RESOLVED') {
+      return res.status(400).json({
+        error: 'Primero debe confirmarse que la reparación terminó.'
+      });
+    }
+
+    const room = await Room.findById(incident.roomId);
+
+    if (!room) {
+      return res.status(404).json({
+        error: 'No se encontró la habitación asociada.'
+      });
+    }
+
+    if (room.status !== 'OUT_OF_SERVICE') {
+      return res.status(400).json({
+        error: 'La habitación no está fuera de servicio.'
+      });
+    }
+
+    room.status = 'CLEANING';
+    await room.save();
+
+    await logAudit(
+      authorizedBy,
+      role,
+      `Autorizó la recuperación de la habitación ${room.number}`,
+      {
+        incidentId: incident._id,
+        roomId: room._id,
+        previousStatus: 'OUT_OF_SERVICE',
+        newStatus: 'CLEANING'
+      }
+    );
+
+    return res.json({
+      message: 'Recuperación autorizada. La habitación está pendiente de aseo.',
+      room,
+      incident
+    });
+  } catch (err) {
+    console.error('Error autorizando recuperación:', err);
+
+    return res.status(400).json({
+      error: 'No se pudo autorizar la recuperación.',
       details: err.message
     });
   }

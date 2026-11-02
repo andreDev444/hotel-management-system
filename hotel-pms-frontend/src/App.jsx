@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom';
 
 import Home from './pages/Home.jsx';
 import ReceptionPanel from './pages/ReceptionPanel.jsx';
@@ -21,7 +21,14 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/limpieza" element={<HousekeepingPage />} />
-        <Route path="/gerencia" element={<ManagerMetrics />} />
+       <Route path="/gerencia" element={<Navigate to="/gerencia/reportes" replace />}/>
+       <Route path="/gerencia/reportes"  element={<ManagerMetrics />} />
+       <Route path="/gerencia/incidencias" element={<ManagerMetrics />} />
+
+<Route
+  path="/gerencia/incidencias"
+  element={<ManagerMetrics />}
+/>
         <Route path="/huespedes" element={<GuestsPage />} />
         <Route path="/pagos" element={<PaymentsPage />}/>
       </Routes>

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React,    { useState, useEffect } from 'react';
 import BookingModal from '../components/BookingModal.jsx';
 import Sidebar from '../components/Sidebar.jsx';
 import './ReceptionPanel.css';
@@ -25,6 +24,7 @@ const STATUS_MAP = {
     color: '#9A783E',
     bg: '#F5EEDC',
   },
+
   OUT_OF_SERVICE: {
     label: 'Mantenimiento',
     color: '#A34F45',
@@ -266,9 +266,11 @@ export default function ReceptionPanel() {
           <header className="reception-header">
             <h1>Panel de recepción</h1>
             <p>
-              Gestión de huéspedes, consumos extra, estados y Check-In /
-              Check-Out
+               Gestiona las reservas, las llegadas, las salidas y los consumos
+               adicionales de los huéspedes.
+               
             </p>
+
           </header>
 
           {loading ? (
@@ -319,32 +321,9 @@ export default function ReceptionPanel() {
                         </strong>
                         <span> / noche</span>
                       </p>
-
-                      <div className="room-status-control">
-                        <label htmlFor={`status-${room._id || room.id}`}>
-                          Cambiar estado
-                        </label>
-
-                        <select
-                          id={`status-${room._id || room.id}`}
-                          value={room.status}
-                          onChange={(e) =>
-                            handleStatusChange(
-                              room._id || room.id,
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option value="AVAILABLE">Disponible</option>
-                          <option value="OCCUPIED">Ocupada</option>
-                          <option value="CLEANING">En Aseo</option>
-                          <option value="RESERVED">Reservada</option>
-                          <option value="OUT_OF_SERVICE">Mantenimiento</option>
-                        </select>
                       </div>
-                    </div>
 
-                    <div className="room-actions">
+                      <div className="room-actions">
                       {room.status === 'AVAILABLE' && (
                         <button
                           className="action-button button-coffee"
@@ -392,19 +371,7 @@ export default function ReceptionPanel() {
                         </>
                       )}
 
-                      {room.status === 'CLEANING' && (
-                        <button
-                          className="action-button button-success"
-                          onClick={() =>
-                            handleStatusChange(
-                              room._id || room.id,
-                              'AVAILABLE'
-                            )
-                          }
-                        >
-                          Aseo finalizado
-                        </button>
-                      )}
+                     
                     </div>
                   </div>
                 );

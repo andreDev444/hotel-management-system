@@ -377,3 +377,94 @@
     padding: 22px;
   }
 }
+
+.maintenance-section {
+  margin: 28px 0;
+  padding: 24px;
+  border: 1px solid #e7e0d8;
+  border-radius: 16px;
+  background: #fffdfb;
+}
+
+.maintenance-heading,
+.maintenance-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.maintenance-heading {
+  margin-bottom: 20px;
+}
+
+.maintenance-heading h2,
+.maintenance-card h3 {
+  margin: 0 0 8px;
+}
+
+.maintenance-heading p,
+.maintenance-meta {
+  color: #766d65;
+  font-size: 14px;
+}
+
+.maintenance-list {
+  display: grid;
+  gap: 14px;
+}
+
+.maintenance-card {
+  padding: 18px;
+  border: 1px solid #e9e3dc;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.incident-status {
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #f0ece7;
+  color: #65584c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.incident-pending {
+  background: #fff0d4;
+  color: #8a5a00;
+}
+
+.incident-in_progress {
+  background: #e7effb;
+  color: #285b96;
+}
+
+.incident-resolved {
+  background: #e5f4e8;
+  color: #247a42;
+}
+
+.maintenance-message {
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.maintenance-error {
+  background: #fce8e6;
+  color: #a12622;
+}
+
+.maintenance-success {
+  background: #e5f4e8;
+  color: #247a42;
+}
+
+@media (max-width: 600px) {
+  .maintenance-heading,
+  .maintenance-card-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,11 +1,9 @@
-
 import { NavLink } from 'react-router-dom';
 import './Sidebar.css';
 
 const receptionMenuItems = [
-  { label: 'Habitaciones', path: '/recepcion', icon: '▦' },
-  { label: 'Huéspedes', path: '/huespedes', icon: '♙' },
   { label: 'Reservas', path: '/recepcion', icon: '▣' },
+  { label: 'Huéspedes', path: '/huespedes', icon: '♙' },
   { label: 'Pagos', path: '/pagos', icon: '＄' }
 ];
 
@@ -13,6 +11,18 @@ export const housekeepingMenuItems = [
   { label: 'Panel de aseo', path: '/limpieza', icon: '▦' }
 ];
 
+export const managementMenuItems = [
+  {
+    label: 'Reportes y analítica',
+    path: '/gerencia/reportes',
+    icon: '▤'
+  },
+  {
+    label: 'Incidencias y mantenimiento',
+    path: '/gerencia/incidencias',
+    icon: '⚒'
+  }
+];
 export default function Sidebar({
   items = receptionMenuItems,
   roleLabel = 'Recepción',

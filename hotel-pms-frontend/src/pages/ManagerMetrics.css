@@ -1,0 +1,554 @@
+
+/* CONTENEDOR PRINCIPAL */
+.manager-content {
+  color: var(--color-text, #34291f);
+}
+
+/* ENCABEZADOS */
+.manager-section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.manager-section-header .page-description {
+  max-width: 650px;
+}
+
+/* REPORTES */
+.manager-reports {
+  padding-top: 12px;
+}
+
+.manager-report-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 25px 0 35px;
+}
+
+.manager-report-card {
+  min-width: 0;
+  padding: 21px;
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-border, #e6ded3);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgb(52 41 31 / 4%);
+  transition: transform 0.2s ease;
+}
+
+.manager-report-card:hover {
+  transform: translateY(-2px);
+}
+
+.manager-report-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 17px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--color-sand, #eee1cf);
+  color: var(--color-coffee, #654832);
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.manager-report-card p {
+  margin: 0 0 9px;
+  color: var(--color-muted, #81766a);
+  font-size: 13px;
+}
+
+.manager-report-card strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--color-coffee, #654832);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 25px;
+  line-height: 1.3;
+}
+
+.manager-report-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-muted, #81766a);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.manager-report-section {
+  margin: 32px 0;
+  padding-top: 26px;
+  border-top: 1px solid var(--color-border, #e6ded3);
+}
+
+.manager-report-section .page-section-title {
+  margin-bottom: 7px;
+}
+
+/* TARJETAS DE GRÁFICAS */
+.manager-chart-card {
+  padding: 25px;
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-border, #e6ded3);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgb(52 41 31 / 4%);
+}
+
+/* OCUPACIÓN */
+.manager-occupancy-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.manager-occupancy-heading strong {
+  color: var(--color-coffee, #654832);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 34px;
+}
+
+.manager-occupancy-heading p {
+  margin: 4px 0 0;
+  color: var(--color-muted, #81766a);
+  font-size: 13px;
+}
+
+.manager-occupancy-secondary {
+  text-align: right;
+}
+
+.manager-occupancy-secondary strong {
+  font-size: 25px;
+}
+
+.manager-progress-track {
+  height: 13px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #eee9e2;
+}
+
+.manager-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-coffee, #654832);
+  transition: width 0.4s ease;
+}
+
+.manager-room-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 26px;
+}
+
+.manager-room-stats > div {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.manager-room-stats > div strong {
+  grid-column: 2;
+  color: var(--color-coffee, #654832);
+  font-size: 19px;
+}
+
+.manager-room-stats > div span:nth-child(2) {
+  overflow-wrap: anywhere;
+  color: var(--color-muted, #81766a);
+  font-size: 12px;
+}
+
+.manager-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dot-occupied {
+  background: #80634f;
+}
+
+.dot-reserved {
+  background: #b18b4d;
+}
+
+.dot-available {
+  background: #587653;
+}
+
+.dot-cleaning {
+  background: #8b7d72;
+}
+
+.dot-maintenance {
+  background: #a34f45;
+}
+
+/* GRÁFICA DE INGRESOS */
+.manager-revenue-chart {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  gap: 18px;
+  min-height: 245px;
+  padding-top: 15px;
+}
+
+.manager-bar-column {
+  display: grid;
+  grid-template-rows: 35px 155px 25px;
+  align-items: end;
+  gap: 9px;
+  min-width: 0;
+  text-align: center;
+}
+
+.manager-bar-column > strong {
+  overflow: hidden;
+  color: var(--color-muted, #81766a);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manager-bar-column > span {
+  color: var(--color-muted, #81766a);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.manager-bar-track {
+  display: flex;
+  height: 155px;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 8px 8px 0 0;
+  background: #f4f0ea;
+}
+
+.manager-bar {
+  width: min(55%, 42px);
+  min-height: 0;
+  border-radius: 7px 7px 0 0;
+  background: var(--color-coffee, #654832);
+  transition: height 0.3s ease;
+}
+
+/* ESTADO DE RESERVAS */
+.manager-booking-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.manager-booking-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-border, #e6ded3);
+  border-radius: 14px;
+}
+
+.manager-booking-card span {
+  color: var(--color-muted, #81766a);
+  font-size: 13px;
+}
+
+.manager-booking-card strong {
+  color: var(--color-coffee, #654832);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 30px;
+}
+
+/* INCIDENCIAS */
+.manager-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 28px 0 36px;
+}
+
+.manager-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  padding: 22px;
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-border, #e6ded3);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgb(52 41 31 / 4%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.manager-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgb(52 41 31 / 7%);
+}
+
+.manager-summary-icon {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--color-sand, #eee1cf);
+  color: var(--color-coffee, #654832);
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.manager-summary-card p {
+  margin: 0 0 7px;
+  color: var(--color-muted, #81766a);
+  font-size: 13px;
+}
+
+.manager-summary-card strong {
+  color: var(--color-coffee, #654832);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.manager-maintenance {
+  padding-top: 12px;
+}
+
+.manager-incident-count {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border, #e6ded3);
+  border-radius: 20px;
+  background: var(--color-sand, #eee1cf);
+  color: var(--color-coffee, #654832);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.manager-incident-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.manager-incident-card {
+  min-width: 0;
+  padding: 22px;
+  background: var(--color-white, #fff);
+  border: 1px solid var(--color-border, #e6ded3);
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgb(52 41 31 / 4%);
+}
+
+.manager-incident-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border, #e6ded3);
+}
+
+.manager-incident-header .page-eyebrow {
+  margin-bottom: 5px;
+}
+
+.manager-room-number {
+  margin: 0;
+  color: var(--color-coffee, #654832);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 25px;
+  font-weight: 600;
+}
+
+/* ESTADOS DE INCIDENCIAS */
+.manager-status {
+  display: inline-block;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: 20px;
+  background: #f1efeb;
+  color: var(--color-text, #34291f);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.manager-status-pending {
+  background: #f7ead4;
+  color: #83591d;
+}
+
+.manager-status-in_progress {
+  background: #e4edf6;
+  color: #345c80;
+}
+
+.manager-status-resolved {
+  background: #e1eee3;
+  color: #326844;
+}
+
+.manager-incident-details {
+  display: grid;
+  gap: 14px;
+  padding: 18px 0;
+}
+
+.manager-incident-details p {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.manager-incident-details strong {
+  color: var(--color-muted, #81766a);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.manager-incident-details span {
+  color: var(--color-text, #34291f);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.manager-incident-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border, #e6ded3);
+}
+
+.manager-incident-actions .page-button {
+  min-height: 40px;
+}
+
+.manager-incident-actions .page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* MENSAJES */
+.manager-alert {
+  margin: 16px 0;
+  padding: 13px 15px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.manager-alert-error {
+  border-color: #e7c4bd;
+  background: #fbefec;
+  color: #8a3428;
+}
+
+.manager-alert-success {
+  border-color: #c7ddc9;
+  background: #edf5ed;
+  color: #326844;
+}
+
+/* TABLET */
+@media (max-width: 1100px) {
+  .manager-report-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manager-room-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .manager-booking-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .manager-summary {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .manager-summary-card {
+    padding: 18px;
+  }
+
+  .manager-incident-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* MÓVIL */
+@media (max-width: 600px) {
+  .manager-report-grid,
+  .manager-booking-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-section-header {
+    flex-direction: column;
+  }
+
+  .manager-occupancy-heading {
+    flex-direction: column;
+  }
+
+  .manager-occupancy-secondary {
+    text-align: left;
+  }
+
+  .manager-room-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manager-chart-card {
+    padding: 17px;
+  }
+
+  .manager-revenue-chart {
+    gap: 7px;
+  }
+
+  .manager-bar-column > strong {
+    font-size: 8px;
+  }
+
+  .manager-incident-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .manager-incident-actions {
+    flex-direction: column;
+  }
+
+  .manager-incident-actions .page-button {
+    width: 100%;
+  }
+
+  .manager-incident-card {
+    padding: 17px;
+  }
+}
