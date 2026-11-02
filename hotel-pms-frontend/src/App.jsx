@@ -19,7 +19,7 @@ export default function App() {
         <Route path="/recepcion" element={<ReceptionPanel />} />
         <Route path="/reservar" element={<PublicBooking />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/*" element={<AdminDashboard />} />
         <Route path="/limpieza" element={<HousekeepingPage />} />
        <Route path="/gerencia" element={<Navigate to="/gerencia/reportes" replace />}/>
        <Route path="/gerencia/reportes"  element={<ManagerMetrics />} />

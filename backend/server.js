@@ -38,81 +38,299 @@ app.use(express.json());
 // AUDITORÍA
 // ======================================================
 
+
 app.get('/api/audit', async (req, res) => {
   try {
-    const logs = await AuditLog.find().sort({ timestamp: -1 });
+    const { start, end } = req.query;
 
-    res.json(logs);
+    const filters = {};
+
+    // Filtrar desde una fecha y hora inicial.
+    if (start) {
+      const startDate = new Date(start);
+
+      if (Number.isNaN(startDate.getTime())) {
+        return res.status(400).json({
+          error: 'La fecha y hora inicial no son válidas.'
+        });
+      }
+
+      filters.timestamp = {
+        ...filters.timestamp,
+        $gte: startDate
+      };
+    }
+
+    // Filtrar hasta una fecha y hora final.
+    if (end) {
+      const endDate = new Date(end);
+
+      if (Number.isNaN(endDate.getTime())) {
+        return res.status(400).json({
+          error: 'La fecha y hora final no son válidas.'
+        });
+      }
+
+      filters.timestamp = {
+        ...filters.timestamp,
+        $lte: endDate
+      };
+    }
+
+    // Validar que el rango tenga sentido.
+    if (
+      start &&
+      end &&
+      new Date(start) > new Date(end)
+    ) {
+      return res.status(400).json({
+        error: 'La fecha inicial no puede ser posterior a la fecha final.'
+      });
+    }
+
+    const logs = await AuditLog.find(filters)
+      .sort({ timestamp: -1 });
+
+    return res.json(logs);
+
   } catch (err) {
-    res.status(500).json({
-      error: err.message
+    console.error('Error consultando auditoría:', err);
+
+    return res.status(500).json({
+      error: 'No se pudo consultar el historial de auditoría.',
+      details: err.message
     });
   }
 });
+
+
 
 // ======================================================
 // USUARIOS
 // ======================================================
 
-// Obtener todos los usuarios
+// Obtener todos los usuarios (sin exponer contraseñas)
 app.get('/api/users', async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find()
+      .select('-password')
+      .sort({ createdAt: -1 });
 
-    res.json(users);
+    return res.status(200).json(users);
   } catch (err) {
-    res.status(500).json({
-      error: err.message
+    console.error('Error obteniendo usuarios:', err);
+
+    return res.status(500).json({
+      error: 'No se pudieron obtener los usuarios.',
+      details: err.message
     });
   }
 });
 
-// Crear usuario
+
+// Crear un nuevo usuario
 app.post('/api/users', async (req, res) => {
   try {
-    const user = await User.create(req.body);
+    const { name, email, password, role, executedBy } = req.body;
 
+    // Validar campos obligatorios
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({
+        error: 'Todos los campos son obligatorios.'
+      });
+    }
+
+    // Validar roles permitidos
+    const allowedRoles = [
+      'ADMIN',
+      'RECEPTIONIST',
+      'HOUSEKEEPING',
+      'MANAGER'
+    ];
+
+    if (!allowedRoles.includes(role)) {
+      return res.status(400).json({
+        error: 'El rol seleccionado no es válido.'
+      });
+    }
+
+    // Comprobar si el correo ya existe
+    const existingUser = await User.findOne({
+      email: email.trim().toLowerCase()
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        error: 'Ya existe un usuario registrado con ese correo.'
+      });
+    }
+
+    // Crear usuario
+    const user = await User.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password,
+      role
+    });
+
+    // Registrar acción en auditoría
     await logAudit(
-      req.body.executedBy || 'Admin',
+      executedBy || 'Admin Principal',
       'ADMIN',
       `Creó usuario ${user.name} (${user.role})`
     );
 
-    res.json(user);
+    // Consultar usuario sin contraseña
+    const safeUser = await User.findById(user._id)
+      .select('-password');
+
+    return res.status(201).json({
+      message: 'Usuario creado correctamente.',
+      user: safeUser
+    });
+
   } catch (err) {
-    res.status(400).json({
-      error: err.message
+    console.error('Error creando usuario:', err);
+
+    return res.status(400).json({
+      error: 'No se pudo crear el usuario.',
+      details: err.message
     });
   }
 });
 
-// Actualizar usuario
+
+// Actualizar rol o estado de un usuario
+
 app.patch('/api/users/:id', async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true
-      }
-    );
+    const { name, email, role, isActive, executedBy } = req.body;
+
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
-        error: 'Usuario no encontrado'
+        error: 'Empleado no encontrado.'
       });
     }
 
-    await logAudit(
-      req.body.executedBy || 'Admin',
+    const allowedRoles = [
       'ADMIN',
-      `Actualizó estado/rol del usuario ${user.name}`
+      'RECEPTIONIST',
+      'HOUSEKEEPING',
+      'MANAGER'
+    ];
+
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({
+          error: 'El nombre no puede estar vacío.'
+        });
+      }
+
+      user.name = name.trim();
+    }
+
+    if (email !== undefined) {
+      const normalizedEmail = email.trim().toLowerCase();
+
+      if (!normalizedEmail) {
+        return res.status(400).json({
+          error: 'El correo no puede estar vacío.'
+        });
+      }
+
+      const existingUser = await User.findOne({
+        email: normalizedEmail,
+        _id: { $ne: user._id }
+      });
+
+      if (existingUser) {
+        return res.status(409).json({
+          error: 'Ese correo ya está registrado.'
+        });
+      }
+
+      user.email = normalizedEmail;
+    }
+
+    if (role !== undefined) {
+      if (!allowedRoles.includes(role)) {
+        return res.status(400).json({
+          error: 'El rol seleccionado no es válido.'
+        });
+      }
+
+      user.role = role;
+    }
+
+    if (isActive !== undefined) {
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({
+          error: 'El estado debe ser verdadero o falso.'
+        });
+      }
+
+      user.isActive = isActive;
+    }
+
+    await user.save();
+
+    await logAudit(
+      executedBy || 'Admin Principal',
+      'ADMIN',
+      `Actualizó al empleado ${user.name}. Rol: ${user.role}. Estado: ${
+        user.isActive ? 'Activo' : 'Inactivo'
+      }`
     );
 
-    res.json(user);
+    const safeUser = await User.findById(user._id).select('-password');
+
+    return res.json({
+      message: 'Empleado actualizado correctamente.',
+      user: safeUser
+    });
+
   } catch (err) {
-    res.status(400).json({
-      error: err.message
+    console.error('Error actualizando empleado:', err);
+
+    return res.status(400).json({
+      error: 'No se pudo actualizar el empleado.',
+      details: err.message
+    });
+  }
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const { executedBy } = req.body;
+
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'Empleado no encontrado.'
+      });
+    }
+
+    await User.findByIdAndDelete(req.params.id);
+
+    await logAudit(
+      executedBy || 'Admin Principal',
+      'ADMIN',
+      `Eliminó al empleado ${user.name} (${user.role})`
+    );
+
+    return res.json({
+      message: 'Empleado eliminado correctamente.'
+    });
+
+  } catch (err) {
+    console.error('Error eliminando empleado:', err);
+
+    return res.status(500).json({
+      error: 'No se pudo eliminar el empleado.',
+      details: err.message
     });
   }
 });
@@ -149,6 +367,124 @@ app.post('/api/rooms', async (req, res) => {
   } catch (err) {
     res.status(400).json({
       error: err.message
+    });
+  }
+});
+
+
+app.patch('/api/rooms/:id', async (req, res) => {
+  try {
+    const { number, type, capacity, pricePerNight, executedBy } = req.body;
+
+    const room = await Room.findById(req.params.id);
+
+    if (!room) {
+      return res.status(404).json({
+        error: 'Habitación no encontrada.'
+      });
+    }
+
+    if (number !== undefined) {
+      if (!String(number).trim()) {
+        return res.status(400).json({
+          error: 'El número de habitación es obligatorio.'
+        });
+      }
+
+      room.number = String(number).trim();
+    }
+
+    if (type !== undefined) room.type = type;
+
+    if (capacity !== undefined) {
+      const parsedCapacity = Number(capacity);
+
+      if (!Number.isInteger(parsedCapacity) || parsedCapacity < 1) {
+        return res.status(400).json({
+          error: 'La capacidad debe ser un número entero mayor que cero.'
+        });
+      }
+
+      room.capacity = parsedCapacity;
+    }
+
+    if (pricePerNight !== undefined) {
+      const parsedPrice = Number(pricePerNight);
+
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        return res.status(400).json({
+          error: 'El precio por noche no es válido.'
+        });
+      }
+
+      room.pricePerNight = parsedPrice;
+    }
+
+    await room.save();
+
+    await logAudit(
+      executedBy || 'Admin Principal',
+      'ADMIN',
+      `Actualizó la habitación ${room.number}`
+    );
+
+    return res.json({
+      message: 'Habitación actualizada correctamente.',
+      room
+    });
+
+  } catch (err) {
+    console.error('Error actualizando habitación:', err);
+
+    return res.status(400).json({
+      error: 'No se pudo actualizar la habitación.',
+      details: err.message
+    });
+  }
+});
+
+
+app.delete('/api/rooms/:id', async (req, res) => {
+  try {
+    const { executedBy } = req.body;
+
+    const room = await Room.findById(req.params.id);
+
+    if (!room) {
+      return res.status(404).json({
+        error: 'Habitación no encontrada.'
+      });
+    }
+
+    // Evitar eliminar habitaciones con reservas históricas.
+    const hasBookings = await Booking.exists({
+      roomId: room._id
+    });
+
+    if (hasBookings) {
+      return res.status(409).json({
+        error: 'No se puede eliminar esta habitación porque tiene reservas asociadas.'
+      });
+    }
+
+    await Room.findByIdAndDelete(req.params.id);
+
+    await logAudit(
+      executedBy || 'Admin Principal',
+      'ADMIN',
+      `Eliminó la habitación ${room.number}`
+    );
+
+    return res.json({
+      message: 'Habitación eliminada correctamente.'
+    });
+
+  } catch (err) {
+    console.error('Error eliminando habitación:', err);
+
+    return res.status(500).json({
+      error: 'No se pudo eliminar la habitación.',
+      details: err.message
     });
   }
 });
@@ -218,44 +554,184 @@ app.patch('/api/rooms/:id/status', async (req, res) => {
     });
   }
 });
+// ===============================
 // GUESTS
+// ===============================
 
+// Obtener todos los huéspedes
 app.get('/api/guests', async (req, res) => {
   try {
     const guests = await Guest.find().sort({ createdAt: -1 });
 
-    res.json(guests);
+    return res.json(guests);
   } catch (err) {
     console.error('❌ Error obteniendo huéspedes:', err);
 
-    res.status(500).json({
-      error: 'No se pudieron obtener los huéspedes',
+    return res.status(500).json({
+      error: 'No se pudieron obtener los huéspedes.',
       details: err.message
     });
   }
 });
 
-app.post('/api/guests', async (req, res) => {
+
+// Actualizar información de un huésped
+app.patch('/api/guests/:id', async (req, res) => {
   try {
-    const guest = await Guest.create(req.body);
+    const {
+      name,
+      document,
+      email,
+      phone,
+      isActive,
+      executedBy,
+      role
+    } = req.body;
+
+    const guest = await Guest.findById(req.params.id);
+
+    if (!guest) {
+      return res.status(404).json({
+        error: 'Huésped no encontrado.'
+      });
+    }
+
+    // Actualizar nombre
+    if (name !== undefined) {
+      if (typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({
+          error: 'El nombre no puede estar vacío.'
+        });
+      }
+
+      guest.name = name.trim();
+    }
+
+    // Actualizar documento
+    if (document !== undefined) {
+      if (typeof document !== 'string' || !document.trim()) {
+        return res.status(400).json({
+          error: 'El documento no puede estar vacío.'
+        });
+      }
+
+      guest.document = document.trim();
+    }
+
+    // Actualizar correo
+    if (email !== undefined) {
+      if (typeof email !== 'string' || !email.trim()) {
+        return res.status(400).json({
+          error: 'El correo electrónico no puede estar vacío.'
+        });
+      }
+
+      guest.email = email.trim().toLowerCase();
+    }
+
+    // Actualizar teléfono
+    if (phone !== undefined) {
+      guest.phone = typeof phone === 'string' ? phone.trim() : phone;
+    }
+
+    // Activar o desactivar huésped
+    if (isActive !== undefined) {
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({
+          error: 'El estado debe ser verdadero o falso.'
+        });
+      }
+
+      guest.isActive = isActive;
+    }
+
+    await guest.save();
 
     await logAudit(
-      req.body.executedBy || 'Recepción',
-      req.body.role || 'RECEPTIONIST',
-      `Registró huésped ${guest.name}`
+      executedBy || 'Admin Principal',
+      role || 'ADMIN',
+      `Actualizó los datos del huésped ${guest.name}`
     );
 
-    res.json(guest);
-  } catch (err) {
-    console.error('❌ Error creando huésped:', err);
+    return res.json({
+      message: 'Huésped actualizado correctamente.',
+      guest
+    });
 
-    res.status(400).json({
-      error: 'No se pudo registrar el huésped',
+  } catch (err) {
+    console.error('❌ Error actualizando huésped:', err);
+
+    if (err.code === 11000) {
+      return res.status(409).json({
+        error: 'Ya existe un huésped registrado con ese documento.'
+      });
+    }
+
+    return res.status(400).json({
+      error: 'No se pudo actualizar el huésped.',
       details: err.message
     });
   }
 });
 
+
+// Eliminar huésped (desactivación lógica)
+app.delete('/api/guests/:id', async (req, res) => {
+  try {
+    const { executedBy, role } = req.body;
+
+    const guest = await Guest.findById(req.params.id);
+
+    if (!guest) {
+      return res.status(404).json({
+        error: 'Huésped no encontrado.'
+      });
+    }
+
+    if (!guest.isActive) {
+      return res.status(400).json({
+        error: 'Este huésped ya se encuentra inactivo.'
+      });
+    }
+
+    // Verificar si el huésped tiene reservas asociadas
+    const hasBookings = await Booking.exists({
+      $or: [
+        { guestId: guest._id },
+        { guestDocument: guest.document }
+      ]
+    });
+
+    // No eliminar físicamente los huéspedes con reservas
+    // Se conserva su historial mediante desactivación
+    guest.isActive = false;
+
+    await guest.save();
+
+    await logAudit(
+      executedBy || 'Admin Principal',
+      role || 'ADMIN',
+      hasBookings
+        ? `Desactivó al huésped ${guest.name}, conservando su historial de reservas`
+        : `Desactivó el registro del huésped ${guest.name}`
+    );
+
+    return res.json({
+      message: hasBookings
+        ? 'Huésped desactivado. Su historial de reservas se conserva.'
+        : 'Huésped desactivado correctamente.',
+      guest
+    });
+
+  } catch (err) {
+    console.error('❌ Error desactivando huésped:', err);
+
+    return res.status(500).json({
+      error: 'No se pudo desactivar el huésped.',
+      details: err.message
+    });
+  }
+});
 // PAYMENTS
 
 app.get('/api/payments', async (req, res) => {

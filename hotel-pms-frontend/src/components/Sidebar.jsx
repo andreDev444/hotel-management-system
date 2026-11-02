@@ -4,7 +4,7 @@ import './Sidebar.css';
 const receptionMenuItems = [
   { label: 'Reservas', path: '/recepcion', icon: '▣' },
   { label: 'Huéspedes', path: '/huespedes', icon: '♙' },
-  { label: 'Pagos', path: '/pagos', icon: '＄' }
+  { label: 'Pagos', path: '/pagos', icon: '$' }
 ];
 
 export const housekeepingMenuItems = [
@@ -12,17 +12,18 @@ export const housekeepingMenuItems = [
 ];
 
 export const managementMenuItems = [
-  {
-    label: 'Reportes y analítica',
-    path: '/gerencia/reportes',
-    icon: '▤'
-  },
-  {
-    label: 'Incidencias y mantenimiento',
-    path: '/gerencia/incidencias',
-    icon: '⚒'
-  }
+  { label: 'Reportes y analítica', path: '/gerencia/reportes', icon: '▤' },
+  { label: 'Incidencias y mantenimiento', path: '/gerencia/incidencias', icon: '⚒' }
 ];
+
+
+export const adminMenuItems = [
+  { label: 'Resumen general', path: '/admin', icon: '▦' },
+  { label: 'Usuarios y empleados', path: '/admin/empleados', icon: '♙' },
+  { label: 'Habitaciones', path: '/admin/habitaciones', icon: '▣' },
+  { label: 'Auditoría', path: '/admin/auditoria', icon: '▤' }
+];
+
 export default function Sidebar({
   items = receptionMenuItems,
   roleLabel = 'Recepción',
@@ -32,23 +33,20 @@ export default function Sidebar({
     <aside className="sidebar">
       <div className="sidebar-brand">
         <div className="sidebar-logo">G</div>
-
         <div>
           <h2>GRAND HOTEL</h2>
           <span>Hotel Management</span>
         </div>
       </div>
 
-      <div className="sidebar-section-title">
-        OPERACIONES
-      </div>
+      <div className="sidebar-section-title">OPERACIONES</div>
 
       <nav className="sidebar-nav">
         {items.map((item, index) => (
           <NavLink
             key={`${item.label}-${index}`}
             to={item.path}
-            end
+            end={item.path === '/admin' || item.path === '/recepcion'}
             className={({ isActive }) =>
               `sidebar-link ${isActive ? 'active' : ''}`
             }
@@ -60,10 +58,7 @@ export default function Sidebar({
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-avatar">
-          {roleLabel.charAt(0)}
-        </div>
-
+        <div className="sidebar-avatar">{roleLabel.charAt(0)}</div>
         <div>
           <strong>{roleLabel}</strong>
           <span>{subtitle}</span>
