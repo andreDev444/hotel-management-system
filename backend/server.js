@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const User = require('./models/User');
 const Room = require('./models/Room');
@@ -104,6 +106,90 @@ app.get('/api/audit', async (req, res) => {
 });
 
 
+// ======================================================
+// AUTENTICACIÓN
+// ======================================================
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validar campos obligatorios
+    if (!email || !password) {
+      return res.status(400).json({
+        error: 'El correo y la contraseña son obligatorios.'
+      });
+    }
+
+    // Buscar empleado por correo
+    const user = await User.findOne({
+      email: email.trim().toLowerCase()
+    });
+
+    // Comprobar que el empleado exista
+    if (!user) {
+      return res.status(401).json({
+        error: 'Correo o contraseña incorrectos.'
+      });
+    }
+
+    // Comprobar que el empleado esté activo
+    if (!user.isActive) {
+      return res.status(403).json({
+        error: 'Tu cuenta está desactivada. Contacta al administrador.'
+      });
+    }
+
+    // Verificar contraseña con bcrypt
+    const passwordIsValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    if (!passwordIsValid) {
+      return res.status(401).json({
+        error: 'Correo o contraseña incorrectos.'
+      });
+    }
+
+    // Verificar que exista la clave secreta
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        error: 'La configuración de autenticación está incompleta.'
+      });
+    }
+
+    // Generar token de autenticación
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    // Responder sin exponer la contraseña
+    return res.status(200).json({
+      message: 'Inicio de sesión exitoso.',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+
+  } catch (err) {
+    console.error('Error en el inicio de sesión:', err);
+
+    return res.status(500).json({
+      error: 'No se pudo iniciar sesión.'
+    });
+  }
+});
+
 
 // ======================================================
 // USUARIOS
@@ -165,11 +251,14 @@ app.post('/api/users', async (req, res) => {
       });
     }
 
+    // Proteger la contraseña antes de guardarla
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     // Crear usuario
     const user = await User.create({
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      password,
+      password: hashedPassword,
       role
     });
 

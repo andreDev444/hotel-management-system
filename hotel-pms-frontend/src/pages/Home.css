@@ -1,0 +1,343 @@
+
+/* ===== PÁGINA PRINCIPAL ===== */
+
+.home-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #211711;
+  color: #f5eee5;
+  font-family: 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+/* ===== ENCABEZADO ===== */
+
+.home-header {
+  min-height: 90px;
+  padding: 0 8%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(232, 211, 185, 0.15);
+}
+
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 13px;
+  letter-spacing: 3px;
+  font-weight: 600;
+}
+
+.home-brand-icon {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #bd9b70;
+  color: #d8b88e;
+  display: grid;
+  place-items: center;
+  font-family: Georgia, serif;
+  font-size: 17px;
+}
+
+.home-access-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 13px 25px;
+  background: rgba(35, 23, 15, 0.45);
+  border: 1px solid #d9b47e;
+  border-radius: 40px;
+  color: #f5e8d6;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.home-access-button svg {
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+.home-access-button:hover {
+  background: #b18b61;
+  color: #211711;
+  transform: translateY(-2px);
+}
+
+/* ===== SECCIÓN PRINCIPAL ===== */
+
+.home-hero {
+  flex: 1;
+  min-height: 580px;
+  padding: 80px 12%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 50px;
+  position: relative;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(33, 23, 17, 0.94) 0%,
+      rgba(33, 23, 17, 0.78) 42%,
+      rgba(33, 23, 17, 0.20) 100%
+    ),
+    url('/images/hotel-hero.jpg');
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.home-hero-content {
+  max-width: 650px;
+  position: relative;
+  z-index: 1;
+}
+
+.home-eyebrow {
+  color: #c6a47c;
+  font-size: 11px;
+  letter-spacing: 4px;
+  font-weight: 600;
+}
+
+.home-hero h1 {
+  margin: 28px 0;
+  font-family: Georgia, serif;
+  font-size: clamp(42px, 5vw, 68px);
+  font-weight: 400;
+  line-height: 1.16;
+  color: #f5eee5;
+}
+
+.home-hero h1 span {
+  color: #c6a47c;
+  font-style: italic;
+}
+
+.home-hero-content p {
+  max-width: 490px;
+  color: #c2b3a5;
+  font-size: 16px;
+  line-height: 1.9;
+  margin-bottom: 35px;
+}
+
+
+.home-booking-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 17px 30px;
+  background: #e8b45f;
+  color: #211711;
+  border: none;
+  border-radius: 40px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.home-booking-button svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.home-booking-button .booking-arrow {
+  font-size: 29px;
+  line-height: 15px;
+  margin-left: 5px;
+}
+
+.home-booking-button:hover {
+  background: #f3cb89;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== ELEMENTO DECORATIVO ===== */
+
+.home-hero-decoration {
+  width: 330px;
+  height: 330px;
+  flex-shrink: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(198, 164, 124, 0.4);
+  border-radius: 50%;
+  position: relative;
+}
+
+.home-decoration-circle {
+  width: 245px;
+  height: 245px;
+  border: 1px solid rgba(198, 164, 124, 0.3);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle, #654832, #35251b 70%);
+}
+
+.home-decoration-circle span {
+  font-family: Georgia, serif;
+  font-size: 70px;
+  color: #d6b58e;
+  letter-spacing: 8px;
+}
+
+.home-decoration-caption {
+  position: absolute;
+  bottom: 25px;
+  color: #c6a47c;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+/* ===== PIE DE PÁGINA ===== */
+
+.home-footer {
+  min-height: 65px;
+  padding: 15px 8%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border-top: 1px solid rgba(232, 211, 185, 0.15);
+  color: #a99580;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+/* ===== ADAPTACIÓN A CELULARES ===== */
+
+@media (max-width: 850px) {
+  .home-hero {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    padding: 65px 8%;
+  }
+
+  .home-hero-content p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .home-hero-decoration {
+    width: 240px;
+    height: 240px;
+  }
+
+  .home-decoration-circle {
+    width: 180px;
+    height: 180px;
+  }
+
+  .home-decoration-circle span {
+    font-size: 50px;
+  }
+}
+
+@media (max-width: 500px) {
+  .home-header {
+    padding: 0 5%;
+  }
+
+  .home-brand {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    gap: 8px;
+  }
+
+  .home-brand-icon {
+    width: 35px;
+    height: 35px;
+  }
+
+  .home-access-button {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+
+  .home-hero h1 {
+    font-size: 39px;
+  }
+
+  .home-footer {
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+
+.home-services {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 35px;
+  padding: 65px 10%;
+  background: #211711;
+  color: #f5eee5;
+  border-top: 1px solid rgba(198, 164, 124, 0.2);
+}
+
+.home-service {
+  text-align: center;
+  padding: 20px 25px;
+}
+
+.service-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 55px;
+  height: 55px;
+  border: 1px solid #b18b61;
+  border-radius: 50%;
+  color: #d6b58e;
+  font-size: 27px;
+  margin-bottom: 18px;
+}
+
+.home-service h2 {
+  font-family: Georgia, serif;
+  font-size: 21px;
+  font-weight: 500;
+  color: #e8c99f;
+  margin-bottom: 14px;
+}
+
+.home-service p {
+  color: #c2b3a5;
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 290px;
+  margin: 0 auto;
+}
+
+@media (max-width: 750px) {
+  .home-services {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 40px 8%;
+  }
+}
